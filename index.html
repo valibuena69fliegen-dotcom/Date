@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#fff7ef">
+<title>Stwórz super randkę</title>
+<style>
+:root{color-scheme:light;--ink:#442631;--rose:#982f54;--muted:#75555e;--line:#ebcbd0;--cream:#fffaf3}
+*{box-sizing:border-box}
+body{margin:0;min-height:100svh;background:radial-gradient(ellipse at 85% 8%,#ffdbe1,transparent 48%),linear-gradient(145deg,#fffaf0,#fae2e7);color:var(--ink);font:16px system-ui,sans-serif}
+main{width:min(100% - 32px,780px);margin:auto;padding:24px 0 34px}
+header{display:flex;align-items:center;gap:10px;font-weight:750;color:var(--rose);margin-bottom:18px}
+.mark{display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:#f8dce3;font-size:19px}
+.panel{background:var(--cream);border:1px solid #fff;border-radius:30px;padding:clamp(18px,5vw,42px);box-shadow:0 18px 65px #7f335013}
+h1{font:500 clamp(34px,7vw,58px)/1.03 Georgia,serif;letter-spacing:-.045em;margin:14px 0 18px}
+em{color:var(--rose);font-weight:400}
+p{color:var(--muted);line-height:1.55}
+.hero{text-align:center}
+.hero img{display:block;width:100%;height:clamp(180px,45vw,290px);object-fit:cover;border-radius:20px}
+.hero h1{margin:24px 0}
+button,a.action{font:inherit;font-weight:720;min-height:48px;border-radius:999px;cursor:pointer;display:inline-flex;justify-content:center;align-items:center;gap:8px;text-decoration:none}
+.action{background:var(--rose);border:1px solid var(--rose);color:white;padding:12px 23px}
+button:disabled{opacity:.45;cursor:default}
+button:focus-visible,a:focus-visible{outline:3px solid #bc5278;outline-offset:4px}
+.step{display:flex;justify-content:space-between;gap:10px;color:var(--rose);font-weight:700;font-size:.86rem}
+.progress{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin:10px 0 24px}
+.progress span{height:5px;border-radius:99px;background:#f1dce0}
+.progress .active{background:#b8446b}
+.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(10px,3vw,22px)}
+.card{position:relative;flex-direction:column;justify-content:flex-start;align-items:stretch;border:2px solid var(--line);border-radius:20px;background:#fff8f3;padding:0;overflow:hidden;color:var(--ink);text-align:left;gap:0}
+.card img{width:100%;aspect-ratio:1.2;object-fit:cover;display:block;background:#f4dce2}
+.card strong{text-align:center;padding:12px 10px 14px;font-size:clamp(.9rem,3.5vw,1.16rem);line-height:1.25}
+.card[aria-pressed="true"]{border-color:var(--rose);background:#fbe5ec}
+.check{display:none;position:absolute;top:8px;right:8px;background:var(--rose);color:#fff;width:30px;height:30px;border-radius:50%;place-items:center}
+.card[aria-pressed="true"] .check{display:grid}
+nav{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:24px}
+.secondary{border:1px solid var(--line);color:var(--rose);background:transparent;padding:10px 15px}
+.summary{list-style:none;padding:0;margin:20px 0 24px}
+.summary li{display:grid;grid-template-columns:49px minmax(0,1fr) auto;gap:10px;align-items:center;border-bottom:1px solid var(--line);padding:9px 0}
+.summary img{width:49px;height:49px;object-fit:cover;border-radius:11px}
+.summary small,.summary strong{display:block}
+.summary small{color:var(--muted);margin-bottom:2px}
+.edit{background:transparent;border:0;color:var(--rose);padding:0 5px}
+.mail-note{font-size:.86rem;margin-bottom:0}
+@media(max-width:370px){.panel{padding:15px}.action{padding-inline:15px}.secondary{padding-inline:10px}.card img{aspect-ratio:1}}
+</style>
+</head>
+<body>
+<main>
+<header><span class="mark" aria-hidden="true">♥</span> Randka we dwoje</header>
+<section class="panel" id="screen" aria-labelledby="heading"></section>
+</main>
+<script>
+'use strict';
+const questions = [
+  ['Co jemy na obiad?', 'Drwal u Jagły', 'Pizza w Fermencie'],
+  ['Co robimy później?', 'Wspólne LEGO', 'Puzzle'],
+  ['Co po odpoczynku?', 'Wspólny trening', 'Wspólne przytulanko'],
+  ['Co będziemy oglądać wieczorem?', 'Percy Jackson', 'Film Marvela'],
+  ['Co jemy do filmu?', 'Chrupki 3D z Biedronki', 'Monster Munch'],
+  ['Co pijemy do filmu?', 'Coś zdrowego', 'Cola z prądem']
+];
+const recipient = 'valibuena69fliegen@gmail.com';
+const selection = Array(questions.length).fill(null);
+const screen = document.querySelector('#screen');
+let step = -1;
+const photo = (question, option) => `photo-${question * 2 + option}.webp`;
+
+function show(nextStep, focus = true) {
+  step = nextStep;
+  if (step === -1) {
+    screen.innerHTML = `<div class="hero">
+      <img src="${photo(2, 1)}" alt="">
+      <h1 id="heading" tabindex="-1">Wybierz kilka rzeczy do <em>super randki</em></h1>
+      <button class="action" id="start">Zacznij <span aria-hidden="true">→</span></button>
+    </div>`;
+    screen.querySelector('#start').onclick = () => show(0);
+  } else if (step < questions.length) {
+    const [question, ...options] = questions[step];
+    screen.innerHTML = `
+      <div class="step"><span>Pytanie ${step + 1} z ${questions.length}</span></div>
+      <div class="progress" aria-hidden="true">${questions.map((_, index) => `<span class="${index <= step ? 'active' : ''}"></span>`).join('')}</div>
+      <h1 id="heading" tabindex="-1">${question}</h1>
+      <div class="cards" role="group" aria-labelledby="heading">
+        ${options.map((option, index) => `<button class="card" aria-pressed="${selection[step] === index}">
+          <img src="${photo(step, index)}" alt=""><strong>${option}</strong><span class="check" aria-hidden="true">✓</span>
+        </button>`).join('')}
+      </div>
+      <nav aria-label="Nawigacja pytań">
+        <button class="secondary" id="back">‹ Wstecz</button>
+        <button class="action" id="next" ${selection[step] === null ? 'disabled' : ''}>
+          ${step === questions.length - 1 ? 'Podsumowanie' : 'Dalej'} <span aria-hidden="true">→</span>
+        </button>
+      </nav>`;
+    const cards = [...screen.querySelectorAll('.card')];
+    const next = screen.querySelector('#next');
+    cards.forEach((card, index) => {
+      card.onclick = () => {
+        selection[step] = index;
+        cards.forEach((choice, choiceIndex) => choice.setAttribute('aria-pressed', String(choiceIndex === index)));
+        next.disabled = false;
+      };
+    });
+    screen.querySelector('#back').onclick = () => show(step - 1);
+    next.onclick = () => show(step + 1);
+  } else {
+    const rows = questions.map(([question, ...options], index) => ({
+      question, answer: options[selection[index]], image: photo(index, selection[index])
+    }));
+    const body = rows.map(({question, answer}) => `${question}\r\n${answer}`).join('\r\n\r\n');
+    const mailLink = `mailto:${recipient}?subject=${encodeURIComponent('Plan naszej super randki')}&body=${encodeURIComponent(body)}`;
+    screen.innerHTML = `<h1 id="heading" tabindex="-1">Plan naszej <em>randki</em></h1>
+      <ul class="summary">${rows.map(({question, answer, image}, index) => `<li>
+        <img src="${image}" alt=""><div><small>${question}</small><strong>${answer}</strong></div>
+        <button class="edit" data-step="${index}" aria-label="Zmień odpowiedź: ${question}">Zmień</button>
+      </li>`).join('')}</ul>
+      <nav aria-label="Podsumowanie">
+        <button class="secondary" id="back">‹ Wstecz</button>
+        <a class="action" id="send">Wyślij dane <span aria-hidden="true">✉</span></a>
+      </nav>
+      <p class="mail-note">Otworzy się gotowa wiadomość. Potwierdź wysłanie w swojej aplikacji pocztowej.</p>`;
+    screen.querySelector('#send').href = mailLink;
+    screen.querySelector('#back').onclick = () => show(questions.length - 1);
+    screen.querySelectorAll('.edit').forEach(button => {
+      button.onclick = () => show(Number(button.dataset.step));
+    });
+  }
+  if (focus) {
+    screen.querySelector('#heading').focus({preventScroll: true});
+    window.scrollTo(0, 0);
+  }
+}
+
+show(-1, false);
+</script>
+</body>
+</html>
